@@ -1,5 +1,5 @@
 # MasterGrid
-Per-master grids for Glyphs.app
+Per-master grids for Glyphs.app (based on [jenskutilek](https://github.com/jenskutilek/MasterGrid)'s plugin) with an input for an offset.
 
 MasterGrid lets you set a grid that is not applied globally like the grid you can set in the font info, but per master.
 
