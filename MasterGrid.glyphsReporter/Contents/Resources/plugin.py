@@ -8,7 +8,7 @@ from AppKit import NSApplication, NSBezierPath, NSClassFromString, NSColor, \
 from GlyphsApp import Glyphs, Message, OFFCURVE
 from GlyphsApp.plugins import ReporterPlugin
 
-plugin_id = "de.kutilek.MasterGrid"
+plugin_id = "de.kutilek.MasterGridOffset"
 
 can_display_ui = True
 
@@ -16,18 +16,18 @@ can_display_ui = True
 def getGrid(master):
     grid = master.userData["%s.value" % plugin_id]
     if grid is not None:
-        gx, gy = grid
+        gx, gy, gxOffset, gyOffset, = grid
     else:
-        gx = gy = 0
+        gx = gy = gxOffset = gyOffset = 0
 
     grid_type = master.userData["%s.type" % plugin_id]
     if grid_type is None:
         grid_type = "units"
 
-    return gx, gy, grid_type
+    return gx, gy, gxOffset, gyOffset, grid_type
 
 
-def setGrid(master, x, y=None, grid_type=None):
+def setGrid(master, x, y=None, xOffset=None, yOffset=None, grid_type=None):
     if x is None:
         x = 0
     if x == 0:
@@ -35,7 +35,7 @@ def setGrid(master, x, y=None, grid_type=None):
         return
     if y is None:
         y = x
-    master.userData["%s.value" % plugin_id] = [x, y]
+    master.userData["%s.value" % plugin_id] = [x, y, xOffset, yOffset]
     if grid_type is None:
         if master.userData["%s.type" % plugin_id] is not None:
             del master.userData["%s.type" % plugin_id]
@@ -71,7 +71,7 @@ class GridDialog(object):
             Message(
                 message=(
                     "Please install vanilla to enable UI dialogs for "
-                    "Master Grid. You can install vanilla through "
+                    "Master Grid Offset. You can install vanilla through "
                     "Glyphs > Preferences > Addons > Modules."
                 ),
                 title="Missing Module"
@@ -80,7 +80,7 @@ class GridDialog(object):
             return
 
         self.w = vanilla.Window(
-            (220, 160),
+            (220, 206),
             "Master Grid",
         )
         y = 8
@@ -96,6 +96,15 @@ class GridDialog(object):
         x = 88
         self.w.label_y = vanilla.TextBox((x, y, 30, 17), "Y:")
         self.w.y = vanilla.EditText((x + 22, y-3, 40, 24))
+
+        y += 46
+        x = 8
+        self.w.label_xOffset = vanilla.TextBox((x, y, 30, 17), "X+:")
+        self.w.xOffset = vanilla.EditText((x + 22, y-3, 40, 24))
+        x = 88
+        self.w.label_yOffset = vanilla.TextBox((x, y, 30, 17), "Y+:")
+        self.w.yOffset = vanilla.EditText((x + 22, y-3, 40, 24))
+
 
         y += 28
         self.w.grid_type_label = vanilla.TextBox((8, y, 66, 17), "Grid is in:")
@@ -125,9 +134,13 @@ class GridDialog(object):
             self.w.master_name.set("Set local grid for master:\nNone")
             self.w.x.set("0")
             self.w.y.set("0")
+            self.w.xOffset.set("0")
+            self.w.yOffset.set("0")
 
             self.w.x.enable(False)
             self.w.y.enable(False)
+            self.w.xOffset.enable(False)
+            self.w.yOffset.enable(False)
             self.w.grid_type.enable(False)
             self.w.button_delete.enable(False)
             self.w.button_set.enable(False)
@@ -135,9 +148,11 @@ class GridDialog(object):
             self.w.master_name.set(
                 "Set local grid for master:\n" + self.master.name
             )
-            gx, gy, grid_type = getGrid(self.master)
+            gx, gy, gxOffset, gyOffset, grid_type = getGrid(self.master)
             self.w.x.set(gx)
             self.w.y.set(gy)
+            self.w.xOffset.set(gxOffset)
+            self.w.yOffset.set(gyOffset)
             if grid_type == "div":
                 self.w.grid_type.set(1)
             else:
@@ -145,9 +160,12 @@ class GridDialog(object):
 
             self.w.x.enable(True)
             self.w.y.enable(True)
+            self.w.xOffset.enable(True)
+            self.w.yOffset.enable(True)
             self.w.grid_type.enable(True)
             self.w.button_delete.enable(True)
             self.w.button_set.enable(True)
+
 
     def callback_cancel(self, info):
         self.w.close()
@@ -159,6 +177,8 @@ class GridDialog(object):
     def callback_set(self, info):
         gx = self.w.x.get()
         gy = self.w.y.get()
+        gxOffset = self.w.xOffset.get()
+        gyOffset = self.w.yOffset.get()
         grid_type = self.w.grid_type.get()
         if grid_type == 0:
             grid_type = "units"
@@ -167,8 +187,12 @@ class GridDialog(object):
         try:
             gxi = int(gx)
             gyi = int(gy)
+            gxOffseti = int(gxOffset)
+            gyOffseti = int(gyOffset)
             gxf = float(gx)
             gyf = float(gy)
+            gxOffsetf = float(gxOffset)
+            gyOffsetf = float(gyOffset)
         except ValueError:
             print("Please enter a floating point number or an integer number.")
             return
@@ -176,31 +200,43 @@ class GridDialog(object):
             gx = gxi
         else:
             gx = gxf
+
+        if gxOffsetf == gxOffseti:
+            gxOffset = gxOffseti
+        else:
+            gxOffset = gxOffsetf
+
         if gyf == gyi:
             gy = gyi
         else:
             gy = gyf
-        setGrid(self.master, gx, gy, grid_type)
+
+        if gyOffsetf == gyOffseti:
+            gyOffset = gyOffseti
+        else:
+            gyOffset = gyOffsetf
+
+        setGrid(self.master, gx, gy, gxOffset, gyOffset, grid_type)
         self.w.close()
         NSNotificationCenter.defaultCenter().postNotificationName_object_("GSRedrawEditView", None)
 
-class MasterGrid(ReporterPlugin):
+class MasterGridOffset(ReporterPlugin):
 
     @objc.python_method
     def settings(self):
         self.menuName = Glyphs.localize({
-            'en': 'Master Grid',
-            'de': 'Master-Raster'
+            'en': 'Master Grid Offset',
+            'de': 'Master-Raster Offset'
         })
 
     @objc.python_method
     def start(self):
         mainMenu = NSApplication.sharedApplication().mainMenu()
-        s = objc.selector(self.editMasterGrid, signature=b'v@:@')
+        s = objc.selector(self.editMasterGridOffset, signature=b'v@:@')
         newMenuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
             Glyphs.localize({
-                'en': "Master Grid…",
-                'de': 'Master-Raster…'
+                'en': "Master Grid Offset…",
+                'de': 'Master-Raster Offset…'
             }),
             s,
             ""
@@ -230,7 +266,7 @@ class MasterGrid(ReporterPlugin):
         if master is None:
             return
 
-        gx, gy, grid_type = getGrid(master)
+        gx, gy, gxOffset, gyOffset, grid_type = getGrid(master)
         if gx == 0 or gy == 0:
             return
 
@@ -238,8 +274,12 @@ class MasterGrid(ReporterPlugin):
             upm = layer.parent.parent.upm
             gx = upm / gx
             gy = upm / gy
+            gxOffset = upm / gxOffset
+            gyOffset = upm / gyOffset
 
-        NSColor.lightGrayColor().set()
+        # NSColor.lightGrayColor().set()
+        selectionColor = 0, 0.5, 0, 0.4
+        NSColor.colorWithCalibratedRed_green_blue_alpha_( *selectionColor ).set()
         NSBezierPath.setDefaultLineWidth_(0.6/self.getScale())
 
         max_x = int(layer.width // gx + 2)
@@ -253,15 +293,15 @@ class MasterGrid(ReporterPlugin):
         for x in range(-1, max_x + 1):
             xx = gx * x
             NSBezierPath.strokeLineFromPoint_toPoint_(
-                NSPoint(xx, min_yy),
-                NSPoint(xx, max_yy)
+                NSPoint(xx+gxOffset, min_yy+gyOffset),
+                NSPoint(xx+gxOffset, max_yy+gyOffset)
             )
 
         for y in range(min_y, max_y + 1):
             yy = gy * y
             NSBezierPath.strokeLineFromPoint_toPoint_(
-                NSPoint(-gx,    yy),
-                NSPoint(max_xx, yy)
+                NSPoint(-gx+gxOffset,    yy+gyOffset),
+                NSPoint(max_xx+gxOffset, yy+gyOffset)
             )
 
         # NSBezierPath.setDefaultLineWidth_(1.0/self.getScale())
@@ -297,5 +337,5 @@ class MasterGrid(ReporterPlugin):
                             NSPoint(x + s1, y + s2)
                         )
 
-    def editMasterGrid(self):
+    def editMasterGridOffset(self):
         GridDialog()
