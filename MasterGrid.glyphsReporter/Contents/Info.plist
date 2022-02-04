@@ -7,25 +7,25 @@
 	<key>CFBundleExecutable</key>
 	<string>plugin</string>
 	<key>CFBundleIdentifier</key>
-	<string>de.kutilek.MasterGrid</string>
+	<string>de.kutilek.MasterGridOffset</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>MasterGrid</string>
+	<string>MasterGridOffset</string>
 	<key>CFBundleVersion</key>
-	<string>13</string>
+	<string>14</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3.5</string>
+	<string>0.3.4</string>
 	<key>UpdateFeedURL</key>
-	<string>https://raw.githubusercontent.com/jenskutilek/MasterGrid/master/MasterGrid.glyphsReporter/Contents/Info.plist</string>
+	<string>https://raw.githubusercontent.com/weiweihuanghuang/MasterGridOffset/master/MasterGridOffset.glyphsReporter/Contents/Info.plist</string>
 	<key>productPageURL</key>
-	<string>https://github.com/jenskutilek/MasterGrid/</string>
+	<string>https://github.com/jenskutilek/MasterGridOffset/</string>
 	<key>productReleaseNotes</key>
-	<string>Python 3/Glyphs 3 compatibility.</string>
+	<string>Added Grid Offset.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright, Jens Kutilek, 2017</string>
 	<key>NSPrincipalClass</key>
-	<string>MasterGrid</string>
+	<string>MasterGridOffset</string>
 	<key>PyMainFileNames</key>
 	<array>
 		<string>plugin.py</string>
